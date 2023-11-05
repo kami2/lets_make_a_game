@@ -9,6 +9,7 @@ class Game:
         pygame.init()
         pygame.display.set_caption("Paciak RPG")
         self.screen = pygame.display.set_mode((1024, 768))
+        self.display = pygame.Surface((512, 384))
 
         self.clock = pygame.time.Clock()
         self.movement = [False, False]
@@ -21,9 +22,10 @@ class Game:
 
     def run(self):
         while True:
-            self.screen.fill((255, 255, 255))
+            self.display.fill((255, 255, 255))
+
             self.player.update((self.movement[1] - self.movement[0], 0))
-            self.player.render(self.screen)
+            self.player.render(self.display)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -40,6 +42,7 @@ class Game:
                     if event.key == pygame.K_RIGHT:
                         self.movement[1] = False
 
+            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()
             self.clock.tick(60)
 
