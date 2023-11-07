@@ -31,11 +31,12 @@ class TileMap:
                 rects.append(pygame.Rect(tile['position'][0] * self.tile_size, tile['position'][1] * self.tile_size, self.tile_size, self.tile_size))
         return rects
 
-    def render(self, surface):
+    def render(self, surface, offset=(0, 0)):
         for tile in self.offgrid_tiles:
-            surface.blit(self.game.assets[tile['type']][tile['variant']], tile['position'])
+            surface.blit(self.game.assets[tile['type']][tile['variant']], (tile['position'][0] - offset[0], tile['position'][1] - offset[1]))
 
         for location in self.tile_map:
             tile = self.tile_map[location]
-            surface.blit(self.game.assets[tile['type']][tile['variant']], (tile['position'][0] * self.tile_size, tile['position'][1] * self.tile_size))
+            surface.blit(self.game.assets[tile['type']][tile['variant']],
+                         (tile['position'][0] * self.tile_size - offset[0], tile['position'][1] * self.tile_size - offset[1]))
 
