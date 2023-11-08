@@ -3,25 +3,30 @@ import pygame
 from scripts.entities import PhysicsEntity
 from scripts.utils import load_image, load_images
 from scripts.tilemap import TileMap
+from scripts.clouds import Clouds
 
 
 class Game:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Paciak RPG")
-        self.screen = pygame.display.set_mode((1024, 768))
-        self.display = pygame.Surface((512, 384))
+        self.screen = pygame.display.set_mode((1920, 1080))
+        self.display = pygame.Surface((960, 540))
 
         self.clock = pygame.time.Clock()
         self.movement = [False, False]
 
         self.assets = {
+            "clouds": load_images('clouds'),
             "decor": load_images('tiles/decor'),
             "grass": load_images('tiles/grass'),
             "large_decor": load_images('tiles/large_decor'),
             "stone": load_images('tiles/stone'),
-            "player": load_image('player/player.png')
+            "player": load_image('player/player.png'),
+            "background": load_image('other/background.png')
         }
+
+        self.clouds = Clouds(self.assets['clouds'], count=16)
 
         self.player = PhysicsEntity(self, "player", (50, 50), (8, 15))
 
@@ -31,11 +36,14 @@ class Game:
 
     def run(self):
         while True:
-            self.display.fill((255, 255, 255))
+            self.display.blit(self.assets['background'], (0, 0))
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0]) / 30
             self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1]) / 30
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
+
+            self.clouds.update()
+            self.clouds.render(self.display, offset=render_scroll)
 
             self.tilemap.render(self.display, offset=render_scroll)
 
