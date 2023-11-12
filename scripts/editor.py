@@ -36,11 +36,14 @@ class Editor:
         self.clicking = False
         self.right_clicking = False
         self.shift = False
+        self.on_grid = True
 
     def run(self):
         while True:
             self.display.fill((0, 0, 0))
 
+            self.scroll[0] += (self.movement[1] - self.movement[0]) * 2
+            self.scroll[1] += (self.movement[3] - self.movement[2]) * 2
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
             self.tilemap.render(self.display, offset=render_scroll)
@@ -50,6 +53,23 @@ class Editor:
 
             mouse_position = pygame.mouse.get_pos()
             mouse_position = (mouse_position[0] / RENDER_SCALE, mouse_position[1] / RENDER_SCALE)
+            tile_position = (int((mouse_position[0] + self.scroll[0]) // self.tilemap.tile_size),
+                             int((mouse_position[1] + self.scroll[1]) // self.tilemap.tile_size))
+
+            if self.on_grid:
+                self.display.blit(current_tile_img, (tile_position[0] * self.tilemap.tile_size - self.scroll[0],
+                                                     tile_position[1] * self.tilemap.tile_size - self.scroll[1]))
+            else:
+                self.display.blit(current_tile_img, mouse_position)
+
+            if self.clicking and self.on_grid:
+                self.tilemap.tile_map[str(tile_position[0]) + ";" + str(tile_position[1])] = {"type": self.tile_list[self.tile_group],
+                                                                                              "variant": self.tile_variant,
+                                                                                              "position": tile_position}
+            if self.right_clicking:
+                tile_location = str(tile_position[0]) + ";" + str(tile_position[1])
+                if tile_location in self.tilemap.tile_map:
+                    del self.tilemap.tile_map[tile_location]
 
             self.display.blit(current_tile_img, (5, 5))
 
@@ -60,6 +80,10 @@ class Editor:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.clicking = True
+                        if not self.on_grid:
+                            self.tilemap.offgrid_tiles.append({"type": self.tile_list[self.tile_group],
+                                                               "variant": self.tile_variant,
+                                                               "position": (mouse_position[0] + self.scroll[0], mouse_position[1] + self.scroll[1])})
                     if event.button == 3:
                         self.right_clicking = True
                     if self.shift:
@@ -74,31 +98,33 @@ class Editor:
                         if event.button == 5:
                             self.tile_group = (self.tile_group + 1) % len(self.tile_list)
                             self.tile_variant = 0
-                    if event.type == pygame.MOUSEBUTTONUP:
-                        if event.button == 1:
-                            self.clicking = False
-                        if event.button == 3:
-                            self.right_clicking = False
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.clicking = False
+                    if event.button == 3:
+                        self.right_clicking = False
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
+                    if event.key == pygame.K_a:
                         self.movement[0] = True
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_d:
                         self.movement[1] = True
-                    if event.key == pygame.K_UP:
+                    if event.key == pygame.K_w:
                         self.movement[2] = True
-                    if event.key == pygame.K_DOWN:
+                    if event.key == pygame.K_s:
                         self.movement[3] = True
+                    if event.key -- pygame.K_g:
+                        self.on_grid = not self.on_grid
                     if event.key == pygame.K_LSHIFT:
                         self.shift = True
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LEFT:
+                    if event.key == pygame.K_a:
                         self.movement[0] = False
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_d:
                         self.movement[1] = False
-                    if event.key == pygame.K_UP:
+                    if event.key == pygame.K_w:
                         self.movement[2] = False
-                    if event.key == pygame.K_DOWN:
+                    if event.key == pygame.K_s:
                         self.movement[3] = False
                     if event.key == pygame.K_LSHIFT:
                         self.shift = False
