@@ -70,6 +70,11 @@ class Editor:
                 tile_location = str(tile_position[0]) + ";" + str(tile_position[1])
                 if tile_location in self.tilemap.tile_map:
                     del self.tilemap.tile_map[tile_location]
+                for tile in self.tilemap.offgrid_tiles.copy():
+                    tile_img = self.assets[tile['type']][tile['variant']]
+                    tile_r = pygame.Rect(tile['position'][0] - self.scroll[0], tile["position"][1], tile_img.get_width(), tile_img.get_height())
+                    if tile_r.collidepoint(mouse_position):
+                        self.tilemap.offgrid_tiles.remove(tile)
 
             self.display.blit(current_tile_img, (5, 5))
 
@@ -115,6 +120,8 @@ class Editor:
                         self.movement[3] = True
                     if event.key -- pygame.K_g:
                         self.on_grid = not self.on_grid
+                    if event.key == pygame.K_o:
+                        self.tilemap.save('map.json')
                     if event.key == pygame.K_LSHIFT:
                         self.shift = True
                 if event.type == pygame.KEYUP:
