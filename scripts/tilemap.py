@@ -1,8 +1,21 @@
 import pygame
 import json
 
+AUTO_TILE_MAP = {
+    tuple(sorted([(1, 0), (0, 1)])): 0,
+    tuple(sorted([(1, 0), (0, 1), (-1, 0)])): 1,
+    tuple(sorted([(-1, 0), (0, 1)])): 2,
+    tuple(sorted([(-1, 0), (0, -1), (0, 1)])): 3,
+    tuple(sorted([(-1, 0), (0, -1)])): 4,
+    tuple(sorted([(-1, 0), (0, -1), (1, 0)])): 5,
+    tuple(sorted([(1, 0), (0, -1)])): 6,
+    tuple(sorted([(1, 0), (0, -1), (0, 1)])): 7,
+    tuple(sorted([(1, 0), (-1, 0), (0, 1), (0, -1)])): 8
+}
+
 NEIGHBOR_OFFSETS = [(-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0), (0, 0), (-1, 1), (0, 1), (1, 1)]
 PHYSICS_TILES = {'grass', 'stone'}
+AUTO_TILE_TYPES = {"grass", "stone"}
 
 
 class TileMap:
@@ -25,6 +38,14 @@ class TileMap:
         with open(path, 'w') as file:
             json.dump({"tilemap": self.tile_map, "tile_size": self.tile_size, "offgrid": self.offgrid_tiles}, file)
 
+    def load(self, path):
+        with open(path, "r") as file:
+            map_data = json.load(file)
+
+        self.tile_map = map_data["tilemap"]
+        self.tile_size = map_data["tile_size"]
+        self.offgrid_tiles = map_data["offgrid"]
+
     def physics_rects_around(self, position):
         rects = []
         for tile in self.tiles_around(position):
@@ -32,6 +53,19 @@ class TileMap:
                 rects.append(pygame.Rect(tile['position'][0] * self.tile_size, tile['position'][1] * self.tile_size,
                                          self.tile_size, self.tile_size))
         return rects
+
+    def auto_tile(self):
+        for location in self.tile_map:
+            tile = self.tile_map[location]
+            neighbors = set()
+            for shift in [(1, 0), (-1, 0), (0, -1), (0, 1)]:
+                check_location = str(tile['position'][0] + shift[0]) + ";" + str(tile["position"][1] + shift[1])
+                if check_location in self.tile_map:
+                    if self.tile_map[check_location]['type'] == tile['type']:
+                        neighbors.add(shift)
+            neighbors = tuple(sorted(neighbors))
+            if (tile['type'] in AUTO_TILE_TYPES) and (neighbors in AUTO_TILE_MAP):
+                tile['variant'] = AUTO_TILE_MAP[neighbors]
 
     def render(self, surface, offset=(0, 0)):
         for tile in self.offgrid_tiles:
