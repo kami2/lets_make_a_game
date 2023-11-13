@@ -31,6 +31,7 @@ class Game:
             "player/run": Animation(load_images('player/run'), img_duration=4),
             "player/jump": Animation(load_images('player/jump')),
             "player/slide": Animation(load_images('player/slide')),
+            "player/wall_slide": Animation(load_images('player/wall_slide')),
             "particles/leaf": Animation(load_images('particles/leaf'), img_duration=20, loop=False)
         }
 
@@ -91,7 +92,7 @@ class Game:
                     if event.key == pygame.K_RIGHT:
                         self.movement[1] = True
                     if event.key == pygame.K_UP:
-                        self.player.velocity[1] = -3
+                        self.player.jump()
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT:
                         self.movement[0] = False
