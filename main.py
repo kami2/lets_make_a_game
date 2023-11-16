@@ -19,6 +19,14 @@ class Game:
         self.clock = pygame.time.Clock()
         self.movement = [False, False]
 
+        self.leaf_spawners = []
+        self.enemies = []
+        self.projectiles = []
+        self.particles = []
+        self.sparks = []
+
+        self.scroll = [0, 0]
+
         self.assets = {
             "clouds": load_images('clouds'),
             "decor": load_images('tiles/decor'),
@@ -45,23 +53,19 @@ class Game:
         self.player = Player(self, (50, 50), (8, 15))
 
         self.tilemap = TileMap(self, tile_size=16)
-        self.tilemap.load('data/maps/map.json')
+        self.load_level(0)
 
-        self.leaf_spawners = []
+    def load_level(self, map_id):
+        self.tilemap.load("data/maps/" + str(map_id) + ".json")
+
         for tree in self.tilemap.extract([('large_decor', 2)], keep=True):
             self.leaf_spawners.append(pygame.Rect(4 + tree['position'][0], 4 + tree['position'][1], 23, 13))
 
-        self.enemies = []
         for spawner in self.tilemap.extract([("spawners", 0), ("spawners", 1)]):
             if spawner["variant"] == 0:
                 self.player.position = spawner["position"]
             else:
                 self.enemies.append(Enemy(self, spawner["position"], (8, 15)))
-
-        self.projectiles = []
-        self.particles = []
-
-        self.scroll = [0, 0]
 
     def run(self):
         while True:
@@ -104,6 +108,12 @@ class Game:
                 elif abs(self.player.dashing) < 50:
                     if self.player.rect().collidepoint(projectile[0]):
                         self.projectiles.remove(projectile)
+
+            for spark in self.sparks.copy():
+                kill = spark.update()
+                spark.render(self.display, offset=render_scroll)
+                if self.kill:
+                    self.sparks.remove(spark)
 
             for particle in self.particles.copy():
                 kill = particle.update()
