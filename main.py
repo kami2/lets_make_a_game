@@ -1,3 +1,4 @@
+import os
 import random
 import math
 import sys
@@ -16,6 +17,15 @@ class Game:
         pygame.display.set_caption("Paciak RPG")
         self.screen = pygame.display.set_mode((1920, 1080))
         self.display = pygame.Surface((960, 540))
+
+        self.leaf_spawners = []
+        self.enemies = []
+        self.projectiles = []
+        self.particles = []
+        self.sparks = []
+
+        self.scroll = [0, 0]
+        self.dead = 0
 
         self.clock = pygame.time.Clock()
         self.movement = [False, False]
@@ -46,7 +56,9 @@ class Game:
         self.player = Player(self, (50, 50), (8, 15))
 
         self.tilemap = TileMap(self, tile_size=16)
-        self.load_level(0)
+
+        self.level = 0
+        self.load_level(self.level)
 
         self.screen_shake = 0
 
@@ -61,6 +73,7 @@ class Game:
 
         self.scroll = [0, 0]
         self.dead = 0
+        self.transition = -30
 
         for tree in self.tilemap.extract([('large_decor', 2)], keep=True):
             self.leaf_spawners.append(pygame.Rect(4 + tree['position'][0], 4 + tree['position'][1], 23, 13))
@@ -78,10 +91,20 @@ class Game:
 
             self.screen_shake = max(0, self.screen_shake - 1)
 
+            if not len(self.enemies):
+                self.transition += 1
+                if self.transition > 30:
+                    self.level = min(self.level + 1, len(os.listdir("data/maps")) - 1)
+                    self.load_level(self.level)
+            if self.transition < 0:
+                self.transition += 1
+
             if self.dead:
                 self.dead += 1
+                if self.dead >= 10:
+                    self.transition = min(30, self.transition + 1)
                 if self.dead > 40:
-                    self.load_level(0)
+                    self.load_level(self.level)
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0]) / 30
             self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1]) / 30
@@ -167,6 +190,12 @@ class Game:
                         self.movement[0] = False
                     if event.key == pygame.K_RIGHT:
                         self.movement[1] = False
+
+            if self.transition:
+                transition_surf = pygame.Surface(self.display.get_size())
+                pygame.draw.circle(transition_surf, (255, 255, 255), (self.display.get_width() // 2, self.display.get_height() // 2), (30 - abs(self.transition)) * 8)
+                transition_surf.set_colorkey((255, 255, 255))
+                self.display.blit(transition_surf, (0, 0))
 
             screen_shake_offset = (random.random() * self.screen_shake - self.screen_shake / 2, random.random() * self.screen_shake - self.screen_shake / 2)
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), screen_shake_offset)
