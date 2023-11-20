@@ -16,7 +16,8 @@ class Game:
         pygame.init()
         pygame.display.set_caption("Paciak RPG")
         self.screen = pygame.display.set_mode((1920, 1080))
-        self.display = pygame.Surface((960, 540))
+        self.display = pygame.Surface((960, 540), pygame.SRCALPHA)
+        self.display_2 = pygame.Surface((960, 540))
 
         self.leaf_spawners = []
         self.enemies = []
@@ -87,7 +88,8 @@ class Game:
 
     def run(self):
         while True:
-            self.display.blit(self.assets['background'], (0, 0))
+            self.display.fill((0, 0, 0, 0))
+            self.display_2.blit(self.assets['background'], (0, 0))
 
             self.screen_shake = max(0, self.screen_shake - 1)
 
@@ -119,7 +121,7 @@ class Game:
                                                    frame=random.randint(0, 20)))
 
             self.clouds.update()
-            self.clouds.render(self.display, offset=render_scroll)
+            self.clouds.render(self.display_2, offset=render_scroll)
 
             self.tilemap.render(self.display, offset=render_scroll)
 
@@ -164,6 +166,11 @@ class Game:
                 if kill:
                     self.sparks.remove(spark)
 
+            display_mask = pygame.mask.from_surface(self.display)
+            display_sillhoutte = display_mask.to_surface(setcolor=(0, 0, 0, 180), unsetcolor=(0, 0, 0, 0))
+            for offset in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                self.display_2.blit(display_sillhoutte, offset)
+
             for particle in self.particles.copy():
                 kill = particle.update()
                 particle.render(self.display, offset=render_scroll)
@@ -197,8 +204,10 @@ class Game:
                 transition_surf.set_colorkey((255, 255, 255))
                 self.display.blit(transition_surf, (0, 0))
 
+            self.display_2.blit(self.display, (0, 0))
+
             screen_shake_offset = (random.random() * self.screen_shake - self.screen_shake / 2, random.random() * self.screen_shake - self.screen_shake / 2)
-            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), screen_shake_offset)
+            self.screen.blit(pygame.transform.scale(self.display_2, self.screen.get_size()), screen_shake_offset)
             pygame.display.update()
             self.clock.tick(60)
 
