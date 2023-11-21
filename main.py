@@ -24,6 +24,7 @@ class Game:
         self.projectiles = []
         self.particles = []
         self.sparks = []
+        self.transition = 0
 
         self.scroll = [0, 0]
         self.dead = 0
